@@ -4,6 +4,7 @@ Two importable workflows:
 
 | File | What it does |
 |---|---|
+| `rivaya-returns-combined.json` | **(Recommended)** Contains both the main workflow and the daily digest in one file. Also includes fixes for Wait node URL parsing. |
 | `rivaya-returns-adjudication.json` | Webhook A → adjudication service → lane branch → emails → human approve/amend loop |
 | `rivaya-returns-daily-digest.json` | Daily FYI digest of auto-lane verdicts + the Clause 15.2 amendment-rate control |
 
@@ -46,10 +47,10 @@ Note which URL **n8n** should use — they are not the same thing:
 | `npx n8n` on the same machine | `http://localhost:8000` |
 | n8n on another host | `http://<your-machine-ip>:8000` (open the firewall) |
 
-## Step 2 — Import both workflows
+## Step 2 — Import the workflow
 
-n8n → **Workflows** → **Import from File** → pick `rivaya-returns-adjudication.json`,
-then repeat for `rivaya-returns-daily-digest.json`. The sticky notes on the canvas
+n8n → **Workflows** → **Import from File** → pick `rivaya-returns-combined.json`. 
+(You can also import `rivaya-returns-adjudication.json` and `rivaya-returns-daily-digest.json` separately if you prefer modular files). The sticky notes on the canvas
 explain each section; you don't need this file open while you work.
 
 ## Step 3 — Set the three values in `Config`
@@ -154,6 +155,7 @@ red if adjudicators amended more than 10% of proposals (the Clause 15.2 control)
 | `Read adjudicator decision` throws "resume request carried no ?outcome=" | Your n8n's Wait node isn't surfacing the query string. Open the node, set **Resume** → *On Webhook Call*, and check the error message — it prints the keys it actually received. |
 | Emails silently don't arrive | SMTP credential not assigned to *that* node — each email node needs it. Check the Executions view for the red node. |
 | `422` from `/adjudicate` | The payload isn't §3.1-shaped. Copy it from the storefront's "Show the payload" panel and post it with curl to see the detail. |
+| `{"error":"Invalid token"}` on clicking email links | In newer n8n versions, `$execution.resumeUrl` automatically appends a `?signature=...`. If your script manually appends `?outcome=`, it creates a double `?` which breaks n8n's token parsing. Use the `rivaya-returns-combined.json` which includes the URL generation fix. |
 
 ---
 
