@@ -1,0 +1,23 @@
+{
+  "requestId": "RET-FIXTURE1048",
+  "submittedAt": "2026-08-12T09:40:00.000Z",
+  "customer": { "email": "asha.menon@example.com" },
+  "order": {
+    "orderId": "ORD-1048",
+    "sku": "RV-HD-LMP-072",
+    "itemName": "Brass Table Lamp — Festival Edit",
+    "category": "decor",
+    "invoiceValue": 2199,
+    "paymentMode": "PREPAID",
+    "deliveryDate": "2026-08-08",
+    "daysSinceDelivery": 4,
+    "flags": { "clearance": false, "festivalSale": true, "fragile": false, "highValue": false }
+  },
+  "return": {
+    "reasonCode": "CHANGE_OF_MIND",
+    "description": "I changed my mind about the lamp and do not need it any more.",
+    "photoAttached": false,
+    "photo": null
+  },
+  "meta": { "source": "rivaya-demo-store", "intakeChannel": "form", "policyVersion": "RHL-POL-RET-3.2" }
+}

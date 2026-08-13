@@ -1,0 +1,552 @@
+{
+  "name": "Rivaya Returns — Adjudication",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rivaya-returns",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "87fb78e2-6a8f-4db5-9d65-295db14d11f8",
+      "name": "Webhook A",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -820,
+        380
+      ],
+      "webhookId": "82d5ca0d-7761-4166-8204-c5006376ddeb"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cdef4df6-0773-4157-b9b1-0ca5c6b33f7c",
+              "name": "adjudicatorUrl",
+              "value": "http://host.docker.internal:8000",
+              "type": "string"
+            },
+            {
+              "id": "4f8cb0b9-c1df-4b59-a666-ede70df0169f",
+              "name": "adminEmail",
+              "value": "returns-desk@rivaya.in",
+              "type": "string"
+            },
+            {
+              "id": "a70ed4e6-dbaf-452e-bcd8-a549735ae7f3",
+              "name": "fromEmail",
+              "value": "returns@rivaya.in",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "2220e7c6-65f6-4785-b947-cbea1aa92bb3",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -600,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, requestId: $json.body.requestId, message: 'Return request received. Watch your inbox for the decision.' }) }}",
+        "options": {}
+      },
+      "id": "52fd17b0-f86d-42f6-8a54-f5956ed7ae6b",
+      "name": "Ack 200",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -380,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.adjudicatorUrl }}/adjudicate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "d24b9875-caff-4b28-ac5e-8327fe873805",
+      "name": "Adjudicate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Flatten the webhook payload + the adjudicator response into one item\n// so every downstream node reads from a single, predictable shape.\nconst cfg = $('Config').first().json;\nconst verdict = $input.first().json;\nconst payload = cfg.body;\n\nreturn [{\n  json: {\n    // config\n    adjudicatorUrl: cfg.adjudicatorUrl,\n    adminEmail: cfg.adminEmail,\n    fromEmail: cfg.fromEmail,\n    // who we are writing to\n    customerEmail: payload.customer && payload.customer.email ? payload.customer.email : '',\n    // the original request, needed again when we ask for the final draft\n    payload,\n    // the adjudication response (verdict, lane, citedClauses, caseFile, ...)\n    ...verdict,\n  },\n}];"
+      },
+      "id": "127e5858-84be-4264-a569-2214c7b7e089",
+      "name": "Build case",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e740a108-b65d-4da1-97b8-a96f3a964acd",
+              "leftValue": "={{ $json.lane }}",
+              "rightValue": "AUTO",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "01da6503-5697-4957-ada4-51af081f037f",
+      "name": "Lane?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        280,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.fromEmail }}",
+        "toEmail": "={{ $json.customerEmail }}",
+        "subject": "={{ $json.customerEmailDraft.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.customerEmailDraft.body }}",
+        "options": {}
+      },
+      "id": "1dcc14a9-1728-4e14-a3c6-f9905b0dd02e",
+      "name": "Send verdict email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        540,
+        200
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "6d656658-b87b-4720-a80a-73bbb6b1fefd",
+      "name": "Decision logged by the service",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        780,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.fromEmail }}",
+        "toEmail": "={{ $json.customerEmail }}",
+        "subject": "={{ $json.customerEmailDraft.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.customerEmailDraft.body }}",
+        "options": {}
+      },
+      "id": "b4147e1f-6418-426e-ad08-4e0183cca0b5",
+      "name": "Send holding email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        540,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build the Clause 12.5 case email: full Case File, the system proposal with\n// its cited clauses, and one-click approve/amend controls.\n//\n// Each control is a link back into THIS paused execution. n8n exposes the\n// resume URL as $execution.resumeUrl; the query string carries the adjudicator's\n// choice, which the next node turns into a confirm/amend record (Clause 15.2).\nconst c = $input.first().json;\nconst hr = c.humanReview || {};\nconst cf = c.caseFile || {};\nconst resume = $execution.resumeUrl;\n\nconst url = (outcome, v) =>\n  `${resume}?outcome=${outcome}&verdict=${encodeURIComponent(v)}&case=${encodeURIComponent(c.requestId)}`;\n\nconst button = (href, label, bg) =>\n  `<a href=\"${href}\" style=\"display:inline-block;margin:4px 6px 4px 0;padding:9px 16px;`\n  + `background:${bg};color:#fff;text-decoration:none;border-radius:6px;`\n  + `font:600 13px/1.2 system-ui,sans-serif\">${label}</a>`;\n\nconst proposed = hr.proposedFinalVerdict;\nconst controls = [];\nif (proposed) {\n  controls.push(button(url('approve', proposed), `Approve — ${proposed}`, '#2E7D4F'));\n}\nfor (const option of (hr.options || [])) {\n  if (option === proposed) continue;\n  controls.push(button(url('amend', option), `Amend → ${option}`, '#3B4E8C'));\n}\n\nconst rows = [\n  ['Order', `${cf.orderId} — ${cf.itemName}`],\n  ['SKU / category', `${cf.sku} / ${cf.category}`],\n  ['Invoice value', `Rs ${Number(cf.invoiceValue || 0).toLocaleString('en-IN')}`],\n  ['Payment mode', cf.paymentMode],\n  ['Delivered', `${cf.deliveryDate} (day ${cf.daysSinceDelivery} of a ${cf.windowDays ?? '-'}-day window)`],\n  ['Reason code', cf.reasonCode],\n  ['Evidence', `${cf.evidenceRequired ? 'required' : 'not required'} / ${cf.photoAttached ? 'attached' : 'none attached'}`],\n  ['Flags', Object.entries(cf.flags || {}).filter(([, v]) => v).map(([k]) => k).join(', ') || 'none'],\n  ['Intake channel', cf.intakeChannel],\n  ['Customer', c.customerEmail],\n].map(([k, v]) => `<tr><td style=\"padding:4px 14px 4px 0;color:#5C5E58\">${k}</td><td style=\"padding:4px 0\"><b>${v ?? ''}</b></td></tr>`).join('');\n\nconst clauses = (c.supportingClauses || [])\n  .slice(0, 8)\n  .map(x => `<li><b>${x.clause}</b> — ${String(x.text).slice(0, 260).replace(/\\n/g, ' ')}</li>`)\n  .join('');\n\nconst priority = hr.priority\n  ? `<p style=\"background:#F7E7E7;color:#A93B3B;padding:10px 14px;border-radius:6px;\n       font:600 13px system-ui\"> PRIORITY ${hr.priority} — Clause 5.4.2 routes this to\n       Quality &amp; Compliance within 4 business hours.</p>`\n  : '';\n\nconst html = `<div style=\"font:14px/1.55 system-ui,sans-serif;color:#20211F;max-width:680px\">\n  <h2 style=\"margin:0 0 2px\">Returns case ${c.requestId}</h2>\n  <p style=\"margin:0 0 16px;color:#5C5E58\">Routed to human review &middot; escalation:\n     <b>${hr.escalationKind || '-'}</b> &middot; confidence: <b>${c.confidence}</b></p>\n  ${priority}\n  <h3 style=\"margin:18px 0 6px\">Case file (Clause 12.1)</h3>\n  <table style=\"border-collapse:collapse;font-size:13px\">${rows}</table>\n  <h3 style=\"margin:18px 0 6px\">System proposal (Clause 12.5)</h3>\n  <p style=\"margin:0 0 6px\"><b>${proposed || 'No verdict proposed'}</b></p>\n  <p style=\"margin:0 0 8px;color:#5C5E58\">${hr.proposalBasis || ''}</p>\n  <p style=\"margin:0 0 4px\"><b>Why it escalated:</b> ${c.reasoning}</p>\n  <p style=\"margin:0;font-family:ui-monospace,monospace;font-size:12px;color:#3B4E8C\">\n     Cited: ${(c.citedClauses || []).join(' &middot; ')}</p>\n  <h3 style=\"margin:18px 0 6px\">Clauses in play</h3>\n  <ul style=\"margin:0;padding-left:18px;font-size:13px;color:#5C5E58\">${clauses}</ul>\n  <h3 style=\"margin:20px 0 8px\">Your decision</h3>\n  <div>${controls.join('')}</div>\n  <p style=\"margin:14px 0 0;font-size:12px;color:#5C5E58\">\n     One click records the outcome, sends the customer their verdict email, and closes\n     the case. The customer has already received a holding email (Clause 12.4) and has\n     been told to expect a decision within 24 business hours.</p>\n</div>`;\n\nreturn [{ json: { ...c, adminSubject: `[${hr.escalationKind || 'review'}] ${c.requestId} — ${c.caseFile ? c.caseFile.itemName : ''}`, adminHtml: html } }];"
+      },
+      "id": "cbd3e310-5a88-401d-88c3-0771eece94e4",
+      "name": "Build admin case email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        780,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.fromEmail }}",
+        "toEmail": "={{ $json.adminEmail }}",
+        "subject": "={{ $json.adminSubject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.adminHtml }}",
+        "options": {}
+      },
+      "id": "65868c6b-002f-4b18-ba74-8ace7ff03a3f",
+      "name": "Send admin case email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1000,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {}
+      },
+      "id": "311b507f-89c3-4cd2-a9fa-a888c1ae91ad",
+      "name": "Wait for adjudicator",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1220,
+        560
+      ],
+      "webhookId": "19bc8e90-bf02-46c3-81ed-78cb8be160bb"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Turn the adjudicator's click into a confirm/amend record.\nconst raw = $input.first().json || {};\nconst q = raw.query || {};\nconst c = $('Build case').first().json;\nconst proposed = (c.humanReview || {}).proposedFinalVerdict;\n\nlet outcome = q.outcome === 'approve' ? 'confirmed'\n            : q.outcome === 'amend' ? 'amended'\n            : null;\nlet finalVerdict = q.verdict || null;\n\nif (!outcome) {\n  // The resume request did not surface a query string. Rather than silently\n  // recording the wrong thing, fall back to the system proposal only when there\n  // is one, and otherwise fail loudly with what we actually received.\n  if (!proposed) {\n    throw new Error(\n      'The resume request carried no ?outcome=/?verdict=, and the engine proposed no '\n      + 'verdict for this case, so there is nothing safe to record. Keys received: '\n      + Object.keys(raw).join(', ')\n    );\n  }\n  outcome = 'confirmed';\n  finalVerdict = proposed;\n}\n\nfinalVerdict = finalVerdict || proposed;\nif (!finalVerdict) {\n  throw new Error('No final verdict could be determined from the approval link.');\n}\n\nreturn [{\n  json: {\n    ...c,\n    outcome,\n    finalVerdict,\n    adjudicator: q.by || '',\n    note: q.note || '',\n  },\n}];"
+      },
+      "id": "f089dc86-5d99-4eaf-b202-8d0e14cf03f8",
+      "name": "Read adjudicator decision",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.adjudicatorUrl }}/decisions/{{ $json.requestId }}/outcome",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ outcome: $json.outcome, finalVerdict: $json.finalVerdict, adjudicator: $json.adjudicator, note: $json.note }) }}",
+        "options": {}
+      },
+      "id": "9fcd27db-b524-42c4-a938-f5ce9a84f10f",
+      "name": "Record outcome",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1660,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Read adjudicator decision').first().json.adjudicatorUrl }}/draft",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ payload: $('Read adjudicator decision').first().json.payload, verdict: $('Read adjudicator decision').first().json.finalVerdict, citedClauses: $('Read adjudicator decision').first().json.citedClauses, deductions: ($('Read adjudicator decision').first().json.humanReview || {}).proposedDeductions || [], note: $('Read adjudicator decision').first().json.note }) }}",
+        "options": {}
+      },
+      "id": "df3da4ac-3f02-4015-abe1-eb77dc0a7209",
+      "name": "Draft final email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1880,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $('Read adjudicator decision').first().json.fromEmail }}",
+        "toEmail": "={{ $('Read adjudicator decision').first().json.customerEmail }}",
+        "subject": "={{ $json.customerEmailDraft.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.customerEmailDraft.body }}",
+        "options": {}
+      },
+      "id": "3272864a-3762-44d9-9950-1f11752c32cc",
+      "name": "Send final verdict email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2100,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 1. Intake\\n\\nWebhook A accepts the §3.1 payload from the storefront (form **and** chat intake converge here).\\n\\n**Ack 200 responds immediately** — adjudication continues after the response, so the storefront never waits.\\n\\n**CORS:** `Allowed Origins` is `*` so the demo HTML can post from `file://` or any host. Tighten it for anything real.",
+        "height": 280,
+        "width": 460,
+        "color": 7
+      },
+      "id": "8ba05a4c-ff13-4895-aac9-46a5c8a905fd",
+      "name": "Note 01f9f9",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -860,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 2. Adjudicate\\n\\nPOSTs the payload to the FastAPI service and gets back the verdict, lane, cited clauses, case file and a drafted email.\\n\\n**Edit the base URL in the `Config` node only** — every other node reads it from there.\\n\\n- n8n in Docker → `http://host.docker.internal:8000`\\n- n8n on the host → `http://localhost:8000`",
+        "height": 280,
+        "width": 400,
+        "color": 7
+      },
+      "id": "bde9a56e-592a-42c0-b25b-4e93569090bd",
+      "name": "Note eecd7c",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3. AUTO lane (Clause 12.4)\\n\\nVerdict email goes out immediately with its clause citations.\\n\\nThe decision log row is already written by the service (Clause 15.1) — the Sheets node is an optional mirror for people who want the digest in a spreadsheet. It is **disabled**; enable it only after connecting Google credentials.",
+        "height": 240,
+        "width": 420,
+        "color": 3
+      },
+      "id": "e1340aa3-4df0-4db0-aa12-c1cff5d291cb",
+      "name": "Note 9e02ad",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        500,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 4. HUMAN_REVIEW lane (Clauses 12.4, 12.5)\\n\\nHolding email first — under no circumstances may a final verdict reach the customer while the case awaits review.\\n\\nThe admin case email carries the full case file, the system proposal and one-click approve/amend links. Each link resumes **this paused execution**.\\n\\n⚠️ The Wait node's resume URL only works when the workflow is **Active**. In test mode use the test URL and keep the tab open.",
+        "height": 300,
+        "width": 520,
+        "color": 6
+      },
+      "id": "53c728f5-f992-4977-a770-174e0c7622fb",
+      "name": "Note 904369",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        740,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 5. Close the loop (Clause 15.2)\\n\\n`Record outcome` appends a *new* row to the decision log — the engine's original proposal is never rewritten, so the divergence stays auditable.\\n\\n`Draft final email` asks the service for copy matching the verdict the human chose. n8n never writes customer copy: clause filtering (15.3) and the one-recourse rule (16.2) live in the service.",
+        "height": 260,
+        "width": 500,
+        "color": 6
+      },
+      "id": "257d3ab9-df34-4c22-919b-73bc4f72fe6a",
+      "name": "Note 0b71c8",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        760
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook A": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Ack 200",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ack 200": {
+      "main": [
+        [
+          {
+            "node": "Adjudicate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Adjudicate": {
+      "main": [
+        [
+          {
+            "node": "Build case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build case": {
+      "main": [
+        [
+          {
+            "node": "Lane?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lane?": {
+      "main": [
+        [
+          {
+            "node": "Send verdict email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send holding email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send verdict email": {
+      "main": [
+        [
+          {
+            "node": "Decision logged by the service",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send holding email": {
+      "main": [
+        [
+          {
+            "node": "Build admin case email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build admin case email": {
+      "main": [
+        [
+          {
+            "node": "Send admin case email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send admin case email": {
+      "main": [
+        [
+          {
+            "node": "Wait for adjudicator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for adjudicator": {
+      "main": [
+        [
+          {
+            "node": "Read adjudicator decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read adjudicator decision": {
+      "main": [
+        [
+          {
+            "node": "Record outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record outcome": {
+      "main": [
+        [
+          {
+            "node": "Draft final email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft final email": {
+      "main": [
+        [
+          {
+            "node": "Send final verdict email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "rivaya-returns-stage4"
+  },
+  "tags": []
+}

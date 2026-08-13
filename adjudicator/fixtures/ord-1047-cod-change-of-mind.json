@@ -1,0 +1,23 @@
+{
+  "requestId": "RET-FIXTURE1047",
+  "submittedAt": "2026-08-12T09:35:00.000Z",
+  "customer": { "email": "asha.menon@example.com" },
+  "order": {
+    "orderId": "ORD-1047",
+    "sku": "RV-AP-BED-045",
+    "itemName": "Sateen Bedsheet Set — King, 400TC",
+    "category": "apparel",
+    "invoiceValue": 3450,
+    "paymentMode": "COD",
+    "deliveryDate": "2026-08-08",
+    "daysSinceDelivery": 4,
+    "flags": { "clearance": false, "festivalSale": false, "fragile": false, "highValue": false }
+  },
+  "return": {
+    "reasonCode": "CHANGE_OF_MIND",
+    "description": "I changed my mind - the shade is not what I had in mind for the bedroom, so I no longer want the set. It is unused with tags on.",
+    "photoAttached": false,
+    "photo": null
+  },
+  "meta": { "source": "rivaya-demo-store", "intakeChannel": "chat", "policyVersion": "RHL-POL-RET-3.2" }
+}

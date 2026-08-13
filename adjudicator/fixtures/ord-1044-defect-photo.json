@@ -1,0 +1,23 @@
+{
+  "requestId": "RET-FIXTURE1044",
+  "submittedAt": "2026-08-12T09:20:00.000Z",
+  "customer": { "email": "asha.menon@example.com" },
+  "order": {
+    "orderId": "ORD-1044",
+    "sku": "RV-KA-MIX-750",
+    "itemName": "750W Mixer Grinder, 3 jars",
+    "category": "appliance",
+    "invoiceValue": 3299,
+    "paymentMode": "PREPAID",
+    "deliveryDate": "2026-08-06",
+    "daysSinceDelivery": 6,
+    "flags": { "clearance": false, "festivalSale": false, "fragile": false, "highValue": false }
+  },
+  "return": {
+    "reasonCode": "DEFECT",
+    "description": "The mixer stopped working on the third use. The motor makes a loud noise and then cuts out completely.",
+    "photoAttached": true,
+    "photo": { "fileName": "mixer-motor.jpg", "mimeType": "image/jpeg", "base64": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" }
+  },
+  "meta": { "source": "rivaya-demo-store", "intakeChannel": "form", "policyVersion": "RHL-POL-RET-3.2" }
+}

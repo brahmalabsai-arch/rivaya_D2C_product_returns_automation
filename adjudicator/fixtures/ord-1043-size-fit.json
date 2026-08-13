@@ -1,0 +1,23 @@
+{
+  "requestId": "RET-FIXTURE1043",
+  "submittedAt": "2026-08-12T09:14:00.000Z",
+  "customer": { "email": "asha.menon@example.com" },
+  "order": {
+    "orderId": "ORD-1043",
+    "sku": "RV-AP-KUR-021",
+    "itemName": "Chanderi Kurta Set — Indigo, size M",
+    "category": "apparel",
+    "invoiceValue": 1899,
+    "paymentMode": "PREPAID",
+    "deliveryDate": "2026-08-07",
+    "daysSinceDelivery": 5,
+    "flags": { "clearance": false, "festivalSale": false, "fragile": false, "highValue": false }
+  },
+  "return": {
+    "reasonCode": "SIZE_FIT",
+    "description": "The size is wrong for me - it is too tight across the shoulders and the sleeves are too short. Tags are still on.",
+    "photoAttached": false,
+    "photo": null
+  },
+  "meta": { "source": "rivaya-demo-store", "intakeChannel": "form", "policyVersion": "RHL-POL-RET-3.2" }
+}

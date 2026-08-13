@@ -1,0 +1,23 @@
+{
+  "requestId": "RET-FIXTURENONSENSE",
+  "submittedAt": "2026-08-12T09:44:00.000Z",
+  "customer": { "email": "asha.menon@example.com" },
+  "order": {
+    "orderId": "ORD-9999",
+    "sku": "RV-XX-PET-001",
+    "itemName": "Live Bonsai Sapling — Ficus",
+    "category": "garden_livestock",
+    "invoiceValue": 2400,
+    "paymentMode": "PREPAID",
+    "deliveryDate": "2026-08-06",
+    "daysSinceDelivery": 6,
+    "flags": { "clearance": false, "festivalSale": false, "fragile": false, "highValue": false }
+  },
+  "return": {
+    "reasonCode": "PLANT_DIED",
+    "description": "The sapling arrived alive but has since dropped all its leaves and looks dead.",
+    "photoAttached": true,
+    "photo": { "fileName": "bonsai.jpg", "mimeType": "image/jpeg", "base64": "iVBORw0KGgo=" }
+  },
+  "meta": { "source": "rivaya-demo-store", "intakeChannel": "form", "policyVersion": "RHL-POL-RET-3.2" }
+}

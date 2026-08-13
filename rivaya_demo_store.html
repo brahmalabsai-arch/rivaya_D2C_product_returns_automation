@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rivaya Home &amp; Living — My Orders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --indigo:#2A3550; --indigo-deep:#1B2338; --marigold:#E8A33D; --marigold-soft:#F7E3C0;
+    --paper:#F6F6F2; --card:#FFFFFF; --ink:#20211F; --ink-soft:#5C5E58; --line:#E3E2DA;
+    --ok:#2E7D4F; --ok-bg:#E7F2EB; --warn:#9A6B15; --warn-bg:#FBF1DC; --stop:#A93B3B; --stop-bg:#F7E7E7;
+    --review:#3B4E8C; --review-bg:#E9EDF8;
+    --radius:14px; --radius-sm:9px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *,*::before,*::after{animation-duration:.001s !important;transition-duration:.001s !important} }
+  body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;min-height:100vh}
+  .mono{font-family:'IBM Plex Mono',monospace}
+  .display{font-family:'Bricolage Grotesque','IBM Plex Sans',sans-serif}
+  a{color:var(--indigo)}
+  button{font-family:inherit;cursor:pointer}
+  :focus-visible{outline:3px solid var(--marigold);outline-offset:2px;border-radius:4px}
+
+  /* ---------- header ---------- */
+  header{background:var(--indigo);color:#F4F3EE;padding:0 clamp(16px,4vw,48px)}
+  .head-inner{max-width:1020px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px}
+  .brand{display:flex;align-items:baseline;gap:10px}
+  .brand .logo{font-size:1.35rem;font-weight:800;letter-spacing:.5px}
+  .brand .logo span{color:var(--marigold)}
+  .brand .tag{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;opacity:.75}
+  .who{display:flex;align-items:center;gap:10px;font-size:.85rem}
+  .who .dot{width:8px;height:8px;border-radius:50%;background:var(--marigold)}
+  .who button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#F4F3EE;border-radius:20px;padding:4px 14px;font-size:.78rem}
+  .who button:hover{border-color:var(--marigold)}
+
+  main{max-width:1020px;margin:0 auto;padding:clamp(20px,4vw,44px) clamp(16px,4vw,48px) 80px}
+
+  /* ---------- login ---------- */
+  .login-wrap{max-width:460px;margin:8vh auto 0;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:36px 32px;box-shadow:0 2px 24px rgba(27,35,56,.06)}
+  .login-wrap h1{font-size:1.7rem;font-weight:800;margin-bottom:6px}
+  .login-wrap h1 em{font-style:normal;color:var(--marigold);}
+  .login-wrap p{color:var(--ink-soft);font-size:.92rem;margin-bottom:22px}
+  label{display:block;font-size:.8rem;font-weight:600;margin-bottom:6px;letter-spacing:.02em}
+  input[type=email],input[type=url],textarea,select{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:var(--radius-sm);font-family:inherit;font-size:.95rem;background:#fff;color:var(--ink)}
+  input:focus,textarea:focus,select:focus{border-color:var(--indigo);outline:none}
+  .btn-primary{width:100%;margin-top:18px;background:var(--indigo);color:#fff;border:none;border-radius:var(--radius-sm);padding:13px;font-size:.98rem;font-weight:600;transition:background .15s}
+  .btn-primary:hover{background:var(--indigo-deep)}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed}
+  .field-err{color:var(--stop);font-size:.8rem;margin-top:6px;display:none}
+
+  /* ---------- orders ---------- */
+  .page-title{display:flex;align-items:end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+  .page-title h1{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:800}
+  .lens{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--ink-soft)}
+  .lens input{accent-color:var(--marigold);width:16px;height:16px}
+  .orders{display:grid;gap:16px}
+  .order{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;display:grid;grid-template-columns:64px 1fr auto;gap:18px;align-items:center}
+  @media(max-width:640px){.order{grid-template-columns:52px 1fr}.order .act{grid-column:1/-1}}
+  .thumb{width:64px;height:64px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0}
+  @media(max-width:640px){.thumb{width:52px;height:52px;font-size:1.3rem}}
+  .o-info h3{font-size:1.02rem;font-weight:600;line-height:1.3}
+  .o-meta{font-size:.8rem;color:var(--ink-soft);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 14px}
+  .badges{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+  .badge{font-size:.68rem;font-weight:600;letter-spacing:.04em;padding:3px 9px;border-radius:20px;text-transform:uppercase}
+  .b-cod{background:var(--marigold-soft);color:#7A5310}
+  .b-prepaid{background:#E8EBF3;color:var(--indigo)}
+  .b-clearance{background:var(--stop-bg);color:var(--stop)}
+  .b-festival{background:#F3E8F7;color:#7C4192}
+  .b-fragile{background:#EAF3F5;color:#2C6E7A}
+  .b-hv{background:#EFEFEA;color:#5C5E58}
+  .act button{background:#fff;border:1.5px solid var(--indigo);color:var(--indigo);border-radius:var(--radius-sm);padding:9px 20px;font-weight:600;font-size:.88rem;transition:all .15s}
+  .act button:hover{background:var(--indigo);color:#fff}
+  .act .done{border-color:var(--ok);color:var(--ok);pointer-events:none}
+  .clause-hint{grid-column:1/-1;font-size:.76rem;background:var(--review-bg);color:var(--review);border-radius:8px;padding:7px 11px;display:none}
+  body.lens-on .clause-hint{display:block}
+
+  /* ---------- modal ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(27,35,56,.55);display:none;align-items:flex-start;justify-content:center;padding:4vh 16px;z-index:50;overflow-y:auto}
+  .overlay.open{display:flex}
+  .modal{background:var(--card);border-radius:var(--radius);max-width:560px;width:100%;padding:28px;position:relative;animation:pop .18s ease-out}
+  @keyframes pop{from{transform:translateY(10px);opacity:0}to{transform:none;opacity:1}}
+  .modal h2{font-size:1.3rem;font-weight:800;margin-bottom:2px}
+  .modal .sub{font-size:.83rem;color:var(--ink-soft);margin-bottom:20px}
+  .m-close{position:absolute;top:14px;right:14px;background:none;border:none;font-size:1.3rem;color:var(--ink-soft);line-height:1;padding:6px}
+  .m-field{margin-bottom:16px}
+  .photo-zone{border:1.5px dashed var(--line);border-radius:var(--radius-sm);padding:14px;text-align:center;font-size:.85rem;color:var(--ink-soft)}
+  .photo-zone.needed{border-color:var(--marigold);background:var(--marigold-soft)}
+  .photo-zone input{margin-top:8px}
+  .photo-name{font-size:.78rem;margin-top:6px;color:var(--ink)}
+  /* route preview — the signature element */
+  .route{border-radius:var(--radius-sm);padding:13px 15px;font-size:.85rem;margin:18px 0 4px;border:1px solid transparent}
+  .route .r-title{font-weight:700;display:flex;align-items:center;gap:8px;font-size:.8rem;letter-spacing:.03em;text-transform:uppercase}
+  .route .r-body{margin-top:5px;line-height:1.45}
+  .route .r-clauses{margin-top:7px;font-size:.72rem;opacity:.85}
+  .r-auto{background:var(--ok-bg);border-color:#BFDCCB;color:var(--ok)}
+  .r-review{background:var(--review-bg);border-color:#C3CDE8;color:var(--review)}
+  .r-reject{background:var(--stop-bg);border-color:#E4C4C4;color:var(--stop)}
+  .r-neutral{background:#F1F1EC;border-color:var(--line);color:var(--ink-soft)}
+
+  /* ---------- toast / confirmation ---------- */
+  .confirm{display:none;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--ok);border-radius:var(--radius);padding:18px 20px;margin-bottom:20px}
+  .confirm.show{display:block}
+  .confirm h3{font-size:1rem;color:var(--ok)}
+  .confirm p{font-size:.85rem;color:var(--ink-soft);margin-top:4px}
+  .confirm .payload{margin-top:10px;background:#20211F;color:#D9E3D2;border-radius:8px;padding:12px;font-size:.72rem;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-all;display:none}
+  .confirm.show-payload .payload{display:block}
+  .confirm .toggle-payload{background:none;border:none;color:var(--indigo);font-size:.78rem;text-decoration:underline;margin-top:8px;padding:0}
+
+  /* ---------- settings ---------- */
+  .settings{margin-top:44px;border-top:1px solid var(--line);padding-top:22px}
+  .settings summary{font-size:.85rem;font-weight:600;color:var(--ink-soft);cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+  .settings summary::before{content:"⚙";font-size:1rem}
+  .settings .s-body{margin-top:14px;max-width:560px}
+  .settings .hint{font-size:.78rem;color:var(--ink-soft);margin-top:6px}
+  footer{max-width:1020px;margin:0 auto;padding:0 clamp(16px,4vw,48px) 40px;font-size:.75rem;color:var(--ink-soft)}
+
+  /* ---------- chat assistant ---------- */
+  .chat-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:20px;overflow:hidden}
+  .chat-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;background:linear-gradient(90deg,var(--indigo) 0%,var(--indigo-deep) 100%);color:#F4F3EE}
+  .chat-head h2{font-size:1rem;font-weight:700;display:flex;align-items:center;gap:10px}
+  .chat-head .hint{font-size:.75rem;opacity:.75}
+  .chat-body{display:none;border-top:1px solid var(--line)}
+  .chat-card.open .chat-body{display:block}
+  .chat-log{max-height:340px;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:10px;background:#FBFBF8}
+  .msg{max-width:82%;padding:9px 13px;border-radius:14px;font-size:.88rem;line-height:1.45;white-space:pre-wrap}
+  .msg.bot{background:#EDEFF5;color:var(--ink);border-bottom-left-radius:4px;align-self:flex-start}
+  .msg.user{background:var(--indigo);color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
+  .msg.sys{background:var(--marigold-soft);color:#7A5310;font-size:.76rem;align-self:center;border-radius:8px}
+  .chat-input{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--line);background:var(--card)}
+  .chat-input input[type=text]{flex:1;padding:10px 13px;border:1.5px solid var(--line);border-radius:20px;font-family:inherit;font-size:.9rem}
+  .chat-input input[type=text]:focus{border-color:var(--indigo);outline:none}
+  .chat-input button{border:none;border-radius:20px;padding:0 16px;font-weight:600;font-size:.88rem}
+  .chat-send{background:var(--indigo);color:#fff}
+  .chat-send:hover{background:var(--indigo-deep)}
+  .chat-attach{background:#fff;border:1.5px solid var(--line) !important;color:var(--ink-soft);font-size:1.05rem !important}
+  .chat-attach.needed{border-color:var(--marigold) !important;background:var(--marigold-soft);color:#7A5310}
+  .chat-reset{background:none;border:none;color:rgba(255,255,255,.8);font-size:.72rem;text-decoration:underline;padding:0 8px}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-inner">
+    <div class="brand display">
+      <div class="logo">rivaya<span>.</span></div>
+      <div class="tag">Home &amp; Living</div>
+    </div>
+    <div class="who" id="whoBar" style="display:none">
+      <span class="dot"></span><span id="whoEmail" class="mono"></span>
+      <button id="logoutBtn" type="button">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ============ LOGIN VIEW ============ -->
+  <section id="loginView">
+    <div class="login-wrap">
+      <h1 class="display">Welcome back<em>.</em></h1>
+      <p>Sign in with your email to see your orders and raise a return. This demo creates your account on the spot — your email is stored so we can send you the return decision.</p>
+      <label for="emailInput">Email address</label>
+      <input type="email" id="emailInput" placeholder="you@example.com" autocomplete="email">
+      <div class="field-err" id="emailErr">Enter a valid email — the verdict mail goes here.</div>
+      <button class="btn-primary" id="loginBtn" type="button">See my orders</button>
+    </div>
+  </section>
+
+  <!-- ============ ORDERS VIEW ============ -->
+  <section id="ordersView" style="display:none">
+    <div class="confirm" id="confirmBox">
+      <h3 id="confirmTitle">Return request received</h3>
+      <p id="confirmText"></p>
+      <button class="toggle-payload" type="button" onclick="document.getElementById('confirmBox').classList.toggle('show-payload')">Show the payload sent to the workflow</button>
+      <div class="payload mono" id="payloadView"></div>
+    </div>
+
+    <div class="page-title">
+      <h1 class="display">My orders</h1>
+      <label class="lens"><input type="checkbox" id="lensToggle"> Demo lens — show which policy path each order exercises</label>
+    </div>
+
+    <div class="chat-card" id="chatCard">
+      <div class="chat-head" id="chatHead" role="button" tabindex="0" aria-expanded="false">
+        <h2>💬 Chat with the returns assistant</h2>
+        <span class="hint" id="chatHint">Prefer typing over forms? Start here ▾</span>
+        <button class="chat-reset" id="chatReset" type="button" style="display:none">Start over</button>
+      </div>
+      <div class="chat-body">
+        <div class="chat-log" id="chatLog" aria-live="polite"></div>
+        <div class="chat-input">
+          <button class="chat-attach" id="chatAttach" type="button" title="Attach a photo" aria-label="Attach a photo">📎</button>
+          <input type="file" id="chatFile" accept="image/*" style="display:none">
+          <input type="text" id="chatText" placeholder="e.g. I want to return the bedsheet set" autocomplete="off">
+          <button class="chat-send" id="chatSend" type="button">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="orders" id="ordersList"></div>
+
+    <details class="settings">
+      <summary>Demo settings</summary>
+      <div class="s-body">
+        <label for="webhookInput">n8n webhook URL</label>
+        <input type="url" id="webhookInput" placeholder="https://your-n8n-host/webhook/rivaya-returns">
+        <label for="chatHookInput" style="margin-top:14px">Chat assistant endpoint URL</label>
+        <input type="url" id="chatHookInput" placeholder="https://your-n8n-host/webhook/rivaya-returns-chat">
+        <p class="hint">Leave empty to use the built-in scripted assistant (simulation). With a URL set, each turn is POSTed there and an LLM does the slot-filling.</p>
+        <p class="hint">Leave empty to run in simulation mode: the request payload is shown on screen instead of being sent. Settings live in memory only and reset on refresh.</p>
+      </div>
+    </details>
+  </section>
+</main>
+
+<footer>Rivaya Home &amp; Living is a fictional brand created to demonstrate an automated returns-adjudication workflow. Orders, prices and dates are synthetic. Policy document: RHL-POL-RET-3.2.</footer>
+
+<!-- ============ RETURN MODAL ============ -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <button class="m-close" id="modalClose" aria-label="Close">✕</button>
+    <h2 class="display" id="modalTitle">Return item</h2>
+    <p class="sub" id="modalSub"></p>
+
+    <div class="m-field">
+      <label for="reasonSelect">Why are you returning this?</label>
+      <select id="reasonSelect"></select>
+    </div>
+
+    <div class="m-field">
+      <label for="descInput">Tell us a bit more</label>
+      <textarea id="descInput" rows="3" placeholder="Describe what happened — this helps us decide faster."></textarea>
+    </div>
+
+    <div class="m-field">
+      <div class="photo-zone" id="photoZone">
+        <span id="photoLabel">A photo is optional for this reason.</span>
+        <input type="file" id="photoInput" accept="image/*">
+        <div class="photo-name mono" id="photoName"></div>
+      </div>
+    </div>
+
+    <div class="route r-neutral" id="routeBox">
+      <div class="r-title" id="routeTitle">Route preview</div>
+      <div class="r-body" id="routeBody">Pick a reason to see how this request will be handled.</div>
+      <div class="r-clauses mono" id="routeClauses"></div>
+    </div>
+
+    <button class="btn-primary" id="submitReturn" type="button">Submit return request</button>
+  </div>
+</div>
+<script>
+/* =====================================================================
+   Rivaya demo storefront — trigger point for the returns adjudicator.
+   All state is in memory (resets on refresh). Dates are computed
+   relative to today so the demo scenarios never go stale.
+   ===================================================================== */
+
+const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return d; };
+const fmt = d => d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+const iso = d => d.toISOString().slice(0, 10);
+
+/* ---- reason codes (mirrors Clause 5.0 of RHL-POL-RET-3.2) ---- */
+const REASONS = {
+  DEFECT:               { label: 'It stopped working / has a defect', photo: 'required' },
+  DAMAGE_TRANSIT:       { label: 'It arrived damaged',                photo: 'required' },
+  WRONG_ITEM:           { label: 'I received a different item',       photo: 'required' },
+  MISSING_PARTS:        { label: 'Parts or accessories are missing',  photo: 'required' },
+  NOT_AS_DESCRIBED:     { label: "It doesn't match the product page", photo: 'required' },
+  SIZE_FIT:             { label: "Size or fit isn't right",           photo: 'none', apparelOnly: true },
+  CHANGE_OF_MIND:       { label: "I changed my mind",                 photo: 'none' },
+  LATE_DELIVERY_REFUSED:{ label: 'It arrived too late',               photo: 'none' }
+};
+
+/* ---- category windows (Clause 2) ---- */
+const WINDOWS = {
+  appliance:     { defect: 10, other: 7,  label: 'Kitchen & Small Appliances' },
+  decor:         { defect: 7,  other: 7,  label: 'Home & Decor' },
+  apparel:       { defect: 15, other: 15, label: 'Apparel & Soft Furnishings' },
+  personal_care: { defect: 7,  other: 7,  label: 'Personal Care' }
+};
+
+/* ---- the six engineered orders ---- */
+const ORDERS = [
+  { id:'ORD-1043', sku:'RV-AP-KUR-021', name:'Chanderi Kurta Set — Indigo, size M', cat:'apparel',
+    price:1899, pay:'PREPAID', deliveredDaysAgo:5, icon:'🧵', tint:'#E8EBF3',
+    flags:{},
+    lens:'Clean path: SIZE_FIT inside 15-day window, prepaid, no photo needed → auto lane (Clauses 2.3, 5.3.1, 12.2)' },
+  { id:'ORD-1044', sku:'RV-KA-MIX-750', name:'750W Mixer Grinder, 3 jars', cat:'appliance',
+    price:3299, pay:'PREPAID', deliveredDaysAgo:6, icon:'⚙️', tint:'#F7E3C0',
+    flags:{},
+    lens:'DEFECT inside 10-day window, photo evidence required → always human review (Clauses 5.1.1, 12.3a)' },
+  { id:'ORD-1045', sku:'RV-HD-VAS-118', name:'Hand-thrown Ceramic Vase — Ash Glaze', cat:'decor',
+    price:1450, pay:'PREPAID', deliveredDaysAgo:20, icon:'🏺', tint:'#EAF3F5',
+    flags:{fragile:true},
+    lens:'20 days since delivery vs a 7-day window → auto-reject REJECT_WINDOW (Clauses 2.2, 12.2b)' },
+  { id:'ORD-1046', sku:'RV-PC-OIL-303', name:'Essential Oil Trio — Vetiver, Rose, Neem', cat:'personal_care',
+    price:699, pay:'PREPAID', deliveredDaysAgo:3, icon:'🫗', tint:'#E7F2EB',
+    flags:{clearance:true},
+    lens:'Clearance ≥60% badge → non-returnable, auto-reject REJECT_POLICY (Clause 4.1e)' },
+  { id:'ORD-1047', sku:'RV-AP-BED-045', name:'Sateen Bedsheet Set — King, 400TC', cat:'apparel',
+    price:3450, pay:'COD', deliveredDaysAgo:4, icon:'🛏️', tint:'#F3E8F7',
+    flags:{},
+    lens:'CHANGE_OF_MIND on a COD order ≥ ₹3,000 → mandatory human review (Clauses 6.3, 12.3e)' },
+  { id:'ORD-1048', sku:'RV-HD-LMP-072', name:'Brass Table Lamp — Festival Edit', cat:'decor',
+    price:2199, pay:'PREPAID', deliveredDaysAgo:4, icon:'🪔', tint:'#FBF1DC',
+    flags:{festival:true},
+    lens:'Festival-sale order: CHANGE_OF_MIND window halves to 3 days; day 4 → REJECT_WINDOW (Clause 11.1a)' }
+];
+
+let currentUser = null;
+let activeOrder = null;
+let photoData = null;   // { name, type, base64 }
+const submitted = new Set();
+
+/* ================= login ================= */
+const $ = id => document.getElementById(id);
+$('loginBtn').addEventListener('click', () => {
+  const email = $('emailInput').value.trim();
+  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  $('emailErr').style.display = valid ? 'none' : 'block';
+  if (!valid) return;
+  currentUser = email;
+  $('whoEmail').textContent = email;
+  $('whoBar').style.display = 'flex';
+  $('loginView').style.display = 'none';
+  $('ordersView').style.display = 'block';
+  renderOrders();
+});
+$('emailInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('loginBtn').click(); });
+$('logoutBtn').addEventListener('click', () => location.reload());
+$('lensToggle').addEventListener('change', e => document.body.classList.toggle('lens-on', e.target.checked));
+
+/* ================= orders list ================= */
+function renderOrders() {
+  const list = $('ordersList');
+  list.innerHTML = '';
+  ORDERS.forEach(o => {
+    const delivered = daysAgo(o.deliveredDaysAgo);
+    const card = document.createElement('div');
+    card.className = 'order';
+    const badges = [
+      o.pay === 'COD' ? '<span class="badge b-cod">COD</span>' : '<span class="badge b-prepaid">Prepaid</span>',
+      o.flags.clearance ? '<span class="badge b-clearance">No returns — clearance</span>' : '',
+      o.flags.festival ? '<span class="badge b-festival">Festival sale</span>' : '',
+      o.flags.fragile ? '<span class="badge b-fragile">Fragile</span>' : '',
+      o.price >= 7500 ? '<span class="badge b-hv">High value</span>' : ''
+    ].join('');
+    const done = submitted.has(o.id);
+    card.innerHTML = `
+      <div class="thumb" style="background:${o.tint}">${o.icon}</div>
+      <div class="o-info">
+        <h3>${o.name}</h3>
+        <div class="o-meta">
+          <span class="mono">${o.id}</span>
+          <span>Delivered ${fmt(delivered)}</span>
+          <span>₹${o.price.toLocaleString('en-IN')}</span>
+          <span>${WINDOWS[o.cat].label}</span>
+        </div>
+        <div class="badges">${badges}</div>
+      </div>
+      <div class="act"><button type="button" class="${done ? 'done' : ''}" data-id="${o.id}">${done ? 'Return requested ✓' : 'Return item'}</button></div>
+      <div class="clause-hint">🔍 ${o.lens}</div>`;
+    list.appendChild(card);
+  });
+  list.querySelectorAll('.act button:not(.done)').forEach(b =>
+    b.addEventListener('click', () => openModal(b.dataset.id)));
+}
+
+
+/* ================= return modal ================= */
+function openModal(orderId) {
+  activeOrder = ORDERS.find(o => o.id === orderId);
+  photoData = null;
+  $('photoInput').value = '';
+  $('photoName').textContent = '';
+  $('descInput').value = '';
+  $('modalTitle').textContent = 'Return: ' + activeOrder.name;
+  $('modalSub').textContent = `${activeOrder.id} · delivered ${fmt(daysAgo(activeOrder.deliveredDaysAgo))} · ₹${activeOrder.price.toLocaleString('en-IN')} · ${activeOrder.pay}`;
+  const sel = $('reasonSelect');
+  sel.innerHTML = '<option value="">Choose a reason…</option>';
+  Object.entries(REASONS).forEach(([code, r]) => {
+    if (r.apparelOnly && activeOrder.cat !== 'apparel') return;
+    sel.insertAdjacentHTML('beforeend', `<option value="${code}">${r.label}</option>`);
+  });
+  updatePhotoZone(); updateRoute();
+  $('overlay').classList.add('open');
+  sel.focus();
+}
+$('modalClose').addEventListener('click', () => $('overlay').classList.remove('open'));
+$('overlay').addEventListener('click', e => { if (e.target === $('overlay')) $('overlay').classList.remove('open'); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('overlay').classList.remove('open'); });
+
+$('reasonSelect').addEventListener('change', () => { updatePhotoZone(); updateRoute(); });
+$('photoInput').addEventListener('change', () => {
+  const f = $('photoInput').files[0];
+  if (!f) { photoData = null; $('photoName').textContent = ''; updateRoute(); return; }
+  if (f.size > 2 * 1024 * 1024) { alert('Please pick an image under 2 MB for this demo.'); $('photoInput').value = ''; return; }
+  const rd = new FileReader();
+  rd.onload = () => {
+    photoData = { name: f.name, type: f.type, base64: rd.result.split(',')[1] };
+    $('photoName').textContent = '📎 ' + f.name;
+    updateRoute();
+  };
+  rd.readAsDataURL(f);
+});
+
+function updatePhotoZone() {
+  const code = $('reasonSelect').value;
+  const needed = code && REASONS[code].photo === 'required';
+  $('photoZone').classList.toggle('needed', needed);
+  $('photoLabel').textContent = needed
+    ? 'A photo is required for this reason (Clause 5 evidence rules).'
+    : 'A photo is optional for this reason.';
+}
+
+/* ---- route preview: a light client-side mirror of the policy.
+   The REAL verdict is issued by the backend engine; this only predicts
+   the lane so the demo makes the decision system visible. ---- */
+function predictRoute(order, code) {
+  if (!code) return null;
+  const days = order.deliveredDaysAgo;
+  const w = WINDOWS[order.cat];
+  const isDefectLike = ['DEFECT','DAMAGE_TRANSIT','WRONG_ITEM','MISSING_PARTS','NOT_AS_DESCRIBED'].includes(code);
+  let windowDays = isDefectLike ? w.defect : w.other;
+  const clauses = [];
+
+  // clearance items: non-returnable except transit damage / wrong item
+  if (order.flags.clearance && !['DAMAGE_TRANSIT','WRONG_ITEM'].includes(code))
+    return { lane:'reject', title:'Likely outcome: not returnable',
+      body:'This item was bought at a clearance discount of 60% or more and carries a “No Returns — Clearance” badge.',
+      clauses:['Clause 4.1(e)'] };
+
+  // festival sale halves change-of-mind windows
+  if (order.flags.festival && code === 'CHANGE_OF_MIND') {
+    windowDays = Math.floor(windowDays / 2);
+    clauses.push('Clause 11.1(a)');
+  }
+
+  // window check
+  if (days > windowDays)
+    return { lane:'reject', title:'Likely outcome: outside the return window',
+      body:`This category allows ${windowDays} days for this reason; delivery was ${days} days ago.`,
+      clauses:[...clauses, 'Clause 2 (category windows)'] };
+
+  // photo-evidence cases: always human review (Rakesh's rule, Clause 12.3a)
+  if (REASONS[code].photo === 'required')
+    return { lane:'review', title:'Routes to human review',
+      body:'Requests that rely on photo evidence are always checked by a person. You will get a confirmation now and a decision within 24 business hours.',
+      clauses:[...clauses, 'Clause 5 evidence rules', 'Clause 12.3(a)'] };
+
+  // high value
+  if (order.price >= 7500)
+    return { lane:'review', title:'Routes to human review',
+      body:'High-value items are reviewed by a person before a decision is issued.',
+      clauses:[...clauses, 'Clause 1.6', 'Clause 12.3(b)'] };
+
+  // COD change-of-mind >= 3000
+  if (order.pay === 'COD' && code === 'CHANGE_OF_MIND' && order.price >= 3000)
+    return { lane:'review', title:'Routes to human review',
+      body:'Cash-on-delivery orders of ₹3,000 or more returned as change-of-mind are reviewed by a person.',
+      clauses:[...clauses, 'Clause 6.3', 'Clause 12.3(e)'] };
+
+  // otherwise: auto lane
+  const fee = (code === 'CHANGE_OF_MIND' && order.cat === 'appliance') ? ' A ₹149 reverse-logistics fee applies.'
+            : (code === 'SIZE_FIT' && order.pay === 'COD') ? ' A ₹99 fee applies on COD refunds for size returns.'
+            : '';
+  return { lane:'auto', title:'Auto decision expected',
+    body:'This looks clear-cut under policy — expect an instant decision by email, with pickup scheduled if approved.' + fee,
+    clauses:[...clauses, 'Clause 12.2 (auto-lane conditions)'] };
+}
+
+function updateRoute() {
+  const code = $('reasonSelect').value;
+  const box = $('routeBox');
+  const r = predictRoute(activeOrder, code);
+  box.className = 'route ' + (r ? {auto:'r-auto',review:'r-review',reject:'r-reject'}[r.lane] : 'r-neutral');
+  $('routeTitle').textContent = r ? r.title : 'Route preview';
+  $('routeBody').textContent = r ? r.body + ' (Preview only — the final decision comes from the policy engine.)' : 'Pick a reason to see how this request will be handled.';
+  $('routeClauses').textContent = r ? r.clauses.join(' · ') : '';
+}
+
+/* ================= submit ================= */
+$('submitReturn').addEventListener('click', async () => {
+  const code = $('reasonSelect').value;
+  if (!code) { alert('Choose a return reason first.'); return; }
+  const btn = $('submitReturn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const payload = buildPayload(activeOrder, code, $('descInput').value.trim(), photoData, 'form');
+  await sendPayload(payload);
+  btn.disabled = false; btn.textContent = 'Submit return request';
+  $('overlay').classList.remove('open');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/* ======================================================================
+   CHAT INTAKE (stage 2.5) — second trigger path, converging on the same
+   payload contract as the form. Session state lives in the browser only.
+   With no chat endpoint configured, a scripted local bot stands in for
+   the LLM so the full flow is demoable before stage 4b.
+   ====================================================================== */
+
+/* --- shared submit: both intake channels call this --- */
+async function sendPayload(payload) {
+  const hook = $('webhookInput').value.trim();
+  let ok = true, note;
+  if (hook) {
+    try {
+      const res = await fetch(hook, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      ok = res.ok;
+      note = ok ? `Sent to the returns workflow. Watch ${currentUser} for the confirmation email.`
+                : `The workflow endpoint answered ${res.status}. Check that the n8n webhook is active.`;
+    } catch (e) { ok = false; note = 'Could not reach the workflow endpoint (network/CORS). The payload is shown below.'; }
+  } else {
+    note = 'Simulation mode — no webhook configured, so nothing was sent. This is the exact payload the workflow would receive.';
+  }
+  const box = $('confirmBox');
+  box.style.borderLeftColor = ok ? 'var(--ok)' : 'var(--stop)';
+  $('confirmTitle').textContent = ok ? `Return request ${payload.requestId} received` : `Request ${payload.requestId} not delivered`;
+  $('confirmTitle').style.color = ok ? 'var(--ok)' : 'var(--stop)';
+  $('confirmText').textContent = note;
+  const ph = payload.return.photo;
+  const view = { ...payload, return: { ...payload.return, photo: ph ? { ...ph, base64: '…' + ph.base64.length + ' chars…' } : null } };
+  $('payloadView').textContent = JSON.stringify(view, null, 2);
+  box.classList.add('show');
+  if (ok && hook) { submitted.add(payload.order.orderId); renderOrders(); }
+  return ok;
+}
+
+function buildPayload(order, reasonCode, description, photo, channel) {
+  const delivered = daysAgo(order.deliveredDaysAgo);
+  return {
+    requestId: 'RET-' + Date.now().toString(36).toUpperCase(),
+    submittedAt: new Date().toISOString(),
+    customer: { email: currentUser },
+    order: {
+      orderId: order.id, sku: order.sku, itemName: order.name, category: order.cat,
+      invoiceValue: order.price, paymentMode: order.pay, deliveryDate: iso(delivered),
+      daysSinceDelivery: order.deliveredDaysAgo,
+      flags: { clearance: !!order.flags.clearance, festivalSale: !!order.flags.festival, fragile: !!order.flags.fragile, highValue: order.price >= 7500 }
+    },
+    return: {
+      reasonCode, description,
+      photoAttached: !!photo,
+      photo: photo ? { fileName: photo.name, mimeType: photo.type, base64: photo.base64 } : null
+    },
+    meta: { source: 'rivaya-demo-store', intakeChannel: channel, policyVersion: 'RHL-POL-RET-3.2' }
+  };
+}
+
+/* --- chat state --- */
+const chat = { open:false, history:[], slots:{}, photo:null, sessionId:'CS-'+Date.now().toString(36), busy:false };
+function freshSlots(){ return { orderId:null, reasonCode:null, description:null, awaitingDescription:false, awaitingConfirm:false }; }
+chat.slots = freshSlots();
+
+function chatMsg(role, text){
+  chat.history.push({ role, text });
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  div.textContent = text;
+  $('chatLog').appendChild(div);
+  $('chatLog').scrollTop = $('chatLog').scrollHeight;
+}
+
+$('chatHead').addEventListener('click', e => {
+  if (e.target.id === 'chatReset') return;
+  chat.open = !chat.open;
+  $('chatCard').classList.toggle('open', chat.open);
+  $('chatHead').setAttribute('aria-expanded', chat.open);
+  $('chatHint').textContent = chat.open ? 'Prefer typing over forms? Start here ▴' : 'Prefer typing over forms? Start here ▾';
+  $('chatReset').style.display = chat.open ? 'inline' : 'none';
+  if (chat.open && chat.history.length === 0)
+    chatMsg('bot', "Hi! I can raise a return for you. Which item is it — you can describe it in your own words (e.g. \"the mixer\" or \"the kurta set\").");
+});
+$('chatHead').addEventListener('keydown', e => { if (e.key==='Enter'||e.key===' ') { e.preventDefault(); $('chatHead').click(); } });
+$('chatReset').addEventListener('click', () => {
+  chat.slots = freshSlots(); chat.photo = null; chat.history = [];
+  $('chatLog').innerHTML = ''; $('chatAttach').classList.remove('needed');
+  chatMsg('bot', "Fresh start. Which item would you like to return?");
+});
+$('chatAttach').addEventListener('click', () => $('chatFile').click());
+$('chatFile').addEventListener('change', () => {
+  const f = $('chatFile').files[0];
+  if (!f) return;
+  if (f.size > 2*1024*1024) { chatMsg('sys','That image is over 2 MB — please pick a smaller one.'); $('chatFile').value=''; return; }
+  const rd = new FileReader();
+  rd.onload = () => {
+    chat.photo = { name:f.name, type:f.type, base64: rd.result.split(',')[1] };
+    chatMsg('user', '📎 attached: ' + f.name);
+    $('chatAttach').classList.remove('needed');
+    botTurn('__photo_attached__');
+  };
+  rd.readAsDataURL(f);
+});
+$('chatSend').addEventListener('click', () => {
+  const t = $('chatText').value.trim();
+  if (!t || chat.busy) return;
+  $('chatText').value = '';
+  chatMsg('user', t);
+  botTurn(t);
+});
+$('chatText').addEventListener('keydown', e => { if (e.key==='Enter') $('chatSend').click(); });
+
+/* --- one turn: remote LLM if configured, scripted bot otherwise --- */
+async function botTurn(message){
+  chat.busy = true;
+  const endpoint = $('chatHookInput') ? $('chatHookInput').value.trim() : '';
+  try {
+    if (endpoint) await remoteTurn(endpoint, message);
+    else simTurn(message);
+  } finally { chat.busy = false; }
+}
+
+async function remoteTurn(endpoint, message){
+  const catalog = ORDERS.map(o => ({ orderId:o.id, name:o.name, category:o.cat, price:o.price, paymentMode:o.pay, daysSinceDelivery:o.deliveredDaysAgo, flags:o.flags }));
+  try {
+    const res = await fetch(endpoint, { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ sessionId:chat.sessionId, customerEmail:currentUser, message, history:chat.history.slice(-20), slots:chat.slots, photoAttached:!!chat.photo, catalog }) });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();           // expected: { reply, slots, complete }
+    if (data.slots) chat.slots = { ...chat.slots, ...data.slots };
+    if (data.reply) chatMsg('bot', data.reply);
+    if (chat.slots.reasonCode && REASONS[chat.slots.reasonCode] && REASONS[chat.slots.reasonCode].photo === 'required' && !chat.photo)
+      $('chatAttach').classList.add('needed');
+    if (data.complete === true) finalizeChatReturn();
+  } catch (e) {
+    chatMsg('sys', 'Could not reach the chat endpoint — falling back to the built-in assistant for this turn.');
+    simTurn(message);
+  }
+}
+
+/* --- scripted stand-in for the LLM (simulation mode) --- */
+const REASON_HINTS = [
+  [/stopp?ed|not working|won'?t (start|turn)|defect|faulty|burning|noise|dead/i, 'DEFECT'],
+  [/damag|crack|broke|shatter|dent|torn box/i, 'DAMAGE_TRANSIT'],
+  [/wrong|different item|not what i ordered/i, 'WRONG_ITEM'],
+  [/missing|no (jar|accessor|manual|part)/i, 'MISSING_PARTS'],
+  [/not as described|looks different|colou?r is (off|different)|misleading/i, 'NOT_AS_DESCRIBED'],
+  [/size|fit|too (small|big|tight|loose)/i, 'SIZE_FIT'],
+  [/late|delayed/i, 'LATE_DELIVERY_REFUSED'],
+  [/changed my mind|don'?t (want|need)|no longer|just return/i, 'CHANGE_OF_MIND']
+];
+const ORDER_HINTS = [
+  [/kurta|chanderi/i,'ORD-1043'], [/mixer|grinder/i,'ORD-1044'], [/vase|ceramic/i,'ORD-1045'],
+  [/oil|vetiver|neem|rose/i,'ORD-1046'], [/bed ?sheet|sateen/i,'ORD-1047'], [/lamp|brass/i,'ORD-1048'],
+  [/ord-?(\d{4})/i, m => 'ORD-' + m[1]]
+];
+
+function simTurn(message){
+  const s = chat.slots;
+  if (message === '__photo_attached__') {
+    if (s.awaitingConfirm || !s.orderId || !s.reasonCode) { chatMsg('bot','Photo noted.'); return; }
+    return maybeConfirm();
+  }
+  if (s.awaitingConfirm) {
+    if (/^(y|yes|confirm|ok|go ahead|submit|haan)/i.test(message)) return finalizeChatReturn();
+    if (/^(n|no|cancel|stop)/i.test(message)) { chat.slots = freshSlots(); chat.photo=null; $('chatAttach').classList.remove('needed'); return chatMsg('bot','No problem, cancelled. Which item would you like to return instead?'); }
+    return chatMsg('bot','Just to be safe I need a clear yes or no — submit this return request?');
+  }
+  if (!s.orderId) {
+    for (const [rx, val] of ORDER_HINTS) {
+      const m = message.match(rx);
+      if (m) { const id = typeof val === 'function' ? val(m) : val;
+        const o = ORDERS.find(x => x.id === id);
+        if (o) { s.orderId = id;
+          // the same message often contains the reason too — try it
+          for (const [rrx, code] of REASON_HINTS) if (rrx.test(message) && !(code==='SIZE_FIT' && o.cat!=='apparel')) { s.reasonCode = code; break; }
+          if (s.reasonCode) { s.description = message; return askEvidenceOrConfirm(); }
+          return chatMsg('bot', `Got it — ${o.name} (${o.id}), delivered ${fmt(daysAgo(o.deliveredDaysAgo))}. What's the reason for the return?`);
+        } }
+    }
+    return chatMsg('bot', "I couldn't match that to one of your orders. You have: " + ORDERS.map(o=>o.name.split('—')[0].trim()).join(', ') + ". Which one is it?");
+  }
+  if (!s.reasonCode) {
+    const o = ORDERS.find(x=>x.id===s.orderId);
+    for (const [rx, code] of REASON_HINTS) if (rx.test(message)) {
+      if (code==='SIZE_FIT' && o.cat!=='apparel') continue;
+      s.reasonCode = code; s.description = message;
+      return askEvidenceOrConfirm();
+    }
+    return chatMsg('bot','Could you say a little more about what went wrong — is it damaged, not working, the wrong item, a size issue, or did you change your mind?');
+  }
+  if (s.awaitingDescription) { s.description = message; s.awaitingDescription = false; return askEvidenceOrConfirm(); }
+  return askEvidenceOrConfirm();
+}
+
+function askEvidenceOrConfirm(){
+  const s = chat.slots;
+  if (!s.description) { s.awaitingDescription = true; return chatMsg('bot','Tell me a bit more about what happened — this goes to the adjudication team.'); }
+  if (REASONS[s.reasonCode].photo === 'required' && !chat.photo) {
+    $('chatAttach').classList.add('needed');
+    return chatMsg('bot','This reason needs a photo as evidence (our policy, Clause 5). Use the 📎 button to attach one — or say "no photo" and the request will be held until evidence arrives.');
+  }
+  return maybeConfirm();
+}
+
+function maybeConfirm(){
+  const s = chat.slots;
+  const o = ORDERS.find(x=>x.id===s.orderId);
+  const route = predictRoute(o, s.reasonCode);
+  s.awaitingConfirm = true;
+  chatMsg('bot', `Here's what I'll submit:\n• ${o.name} (${o.id})\n• Reason: ${REASONS[s.reasonCode].label}\n• Photo: ${chat.photo ? chat.photo.name : 'none'}\n\n${route ? route.title + ' — ' + route.body : ''}\n\nSubmit this return request? (yes / no)`);
+}
+
+function chatNoPhoto(){ return /no photo|without photo|don'?t have/i.test((chat.history.at(-1)||{}).text||''); }
+
+async function finalizeChatReturn(){
+  const s = chat.slots;
+  const o = ORDERS.find(x=>x.id===s.orderId);
+  if (!o || !s.reasonCode) { chatMsg('sys','Something is missing — say "start over" to reset.'); return; }
+  chatMsg('bot','Submitting…');
+  const payload = buildPayload(o, s.reasonCode, s.description || '', chat.photo, 'chat');
+  const ok = await sendPayload(payload);
+  chatMsg(ok ? 'bot' : 'sys', ok ? `Done — request ${payload.requestId} is in. You'll get an email at ${currentUser}.` : 'The workflow endpoint could not be reached; the payload is shown above.');
+  chat.slots = freshSlots(); chat.photo = null; $('chatAttach').classList.remove('needed');
+}
+
+/* allow "no photo" to skip evidence in sim mode */
+(function(){
+  const orig = simTurn;
+  simTurn = function(message){
+    const s = chat.slots;
+    if (s.orderId && s.reasonCode && REASONS[s.reasonCode].photo==='required' && !chat.photo && /no photo|without|don'?t have/i.test(message)) {
+      chatMsg('bot','Understood — I\'ll submit it without evidence; per policy it will be held for 72 hours awaiting a photo (HOLD_EVIDENCE) before a decision.');
+      return maybeConfirm();
+    }
+    return orig(message);
+  };
+})();
+
+</script>
+</body>
+</html>

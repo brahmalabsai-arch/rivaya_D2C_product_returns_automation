@@ -1,0 +1,23 @@
+{
+  "requestId": "RET-FIXTURE1045",
+  "submittedAt": "2026-08-12T09:26:00.000Z",
+  "customer": { "email": "asha.menon@example.com" },
+  "order": {
+    "orderId": "ORD-1045",
+    "sku": "RV-HD-VAS-118",
+    "itemName": "Hand-thrown Ceramic Vase — Ash Glaze",
+    "category": "decor",
+    "invoiceValue": 1450,
+    "paymentMode": "PREPAID",
+    "deliveryDate": "2026-07-23",
+    "daysSinceDelivery": 20,
+    "flags": { "clearance": false, "festivalSale": false, "fragile": true, "highValue": false }
+  },
+  "return": {
+    "reasonCode": "CHANGE_OF_MIND",
+    "description": "I changed my mind about the vase - it does not suit the room and I no longer want it.",
+    "photoAttached": false,
+    "photo": null
+  },
+  "meta": { "source": "rivaya-demo-store", "intakeChannel": "form", "policyVersion": "RHL-POL-RET-3.2" }
+}

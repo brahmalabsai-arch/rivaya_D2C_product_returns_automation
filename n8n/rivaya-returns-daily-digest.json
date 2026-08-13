@@ -1,0 +1,201 @@
+{
+  "name": "Rivaya Returns — Daily Digest",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "4005ed76-e2e7-46c5-af15-8620f7922a3a",
+      "name": "Every morning 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -600,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a2dbe111-ca0a-4df7-aa63-15413e46871e",
+              "name": "adjudicatorUrl",
+              "value": "http://host.docker.internal:8000",
+              "type": "string"
+            },
+            {
+              "id": "4d924f78-5c5e-488b-9114-07691569e6ca",
+              "name": "deskEmail",
+              "value": "returns-desk@rivaya.in",
+              "type": "string"
+            },
+            {
+              "id": "7ddb4534-2681-4caa-9b3f-df9e1d19e8f8",
+              "name": "fromEmail",
+              "value": "returns@rivaya.in",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "a01c17d5-cea7-4a54-b985-8c321675db9f",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -380,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.adjudicatorUrl }}/decisions?limit=200",
+        "options": {}
+      },
+      "id": "ec199190-173a-4a6c-b8de-49058ab683b8",
+      "name": "Get decisions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Config').first().json.adjudicatorUrl }}/metrics?windowDays=30",
+        "options": {}
+      },
+      "id": "4ae69d67-9c23-4d9d-9a5d-0806fe6a7463",
+      "name": "Get metrics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        60,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Daily FYI digest of auto-lane verdicts (Clause 12.5) plus the\n// Clause 15.2 amendment-rate control.\nconst metrics = $input.first().json;\nconst rows = ($('Get decisions').first().json.decisions || []);\nconst cfg = $('Config').first().json;\n\nconst since = Date.now() - 24 * 60 * 60 * 1000;\nconst recent = rows.filter(r => new Date(r.timestamp).getTime() >= since);\nconst auto = recent.filter(r => r.decidedBy === 'engine' && r.lane === 'AUTO');\nconst escalated = recent.filter(r => r.decidedBy === 'engine' && r.lane === 'HUMAN_REVIEW');\nconst humanRows = recent.filter(r => r.decidedBy === 'human');\n\nconst cell = v => `<td style=\"padding:6px 12px 6px 0;border-bottom:1px solid #E3E2DA\">${v ?? ''}</td>`;\nconst line = r => `<tr>\n  ${cell(`<code>${r.caseId}</code>`)}\n  ${cell((r.caseFile && r.caseFile.order ? r.caseFile.order.itemName : '') || '')}\n  ${cell(`<b>${r.verdict}</b>`)}\n  ${cell(r.confidence)}\n  ${cell((r.citedClauses || []).join(', '))}\n</tr>`;\n\nconst kpi = metrics.humanAdjudication || {};\nconst st = metrics.straightThrough || {};\nconst warn = kpi.breachesClause15_2\n  ? `<p style=\"background:#F7E7E7;color:#A93B3B;padding:10px 14px;border-radius:6px\">\n       <b>Clause 15.2 breach.</b> Adjudicators amended ${kpi.amendmentRatePct}% of system\n       proposals over the last ${metrics.windowDays} days, above the ${kpi.ceilingPct}%\n       ceiling. Review the divergence log and either fix the engine logic or amend the\n       policy document.</p>`\n  : '';\n\nconst html = `<div style=\"font:14px/1.55 system-ui,sans-serif;color:#20211F;max-width:760px\">\n  <h2 style=\"margin:0 0 4px\">Rivaya returns — daily digest</h2>\n  <p style=\"margin:0 0 16px;color:#5C5E58\">No action required. Auto-lane verdicts issued in\n     the last 24 hours, and the rolling ${metrics.windowDays}-day control numbers.</p>\n  ${warn}\n  <p style=\"margin:0 0 14px\">\n    <b>${auto.length}</b> auto verdicts &middot;\n    <b>${escalated.length}</b> escalated to review &middot;\n    <b>${humanRows.length}</b> closed by an adjudicator<br>\n    Straight-through rate (${metrics.windowDays}d): <b>${st.autoRatePct ?? '-'}%</b> &middot;\n    amendment rate: <b>${kpi.amendmentRatePct ?? 'n/a'}%</b> &middot;\n    median engine latency: <b>${metrics.latency ? metrics.latency.avgMs : '-'} ms</b>\n  </p>\n  <table style=\"border-collapse:collapse;font-size:13px;width:100%\">\n    <tr style=\"text-align:left;color:#5C5E58\">\n      <th style=\"padding-bottom:6px\">Case</th><th>Item</th><th>Verdict</th>\n      <th>Confidence</th><th>Clauses</th>\n    </tr>\n    ${auto.map(line).join('') || '<tr><td colspan=\"5\" style=\"padding:8px 0;color:#5C5E58\">No auto-lane verdicts in the last 24 hours.</td></tr>'}\n  </table>\n</div>`;\n\nreturn [{ json: { ...cfg, digestHtml: html, autoCount: auto.length } }];"
+      },
+      "id": "c1fd6509-0b0b-43e3-aa00-306256e103f7",
+      "name": "Build digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.fromEmail }}",
+        "toEmail": "={{ $json.deskEmail }}",
+        "subject": "=Rivaya returns — daily digest ({{ $json.autoCount }} auto verdicts)",
+        "emailFormat": "html",
+        "html": "={{ $json.digestHtml }}",
+        "options": {}
+      },
+      "id": "fc3f17b7-12a5-4e77-b19a-7071ce3fb0f2",
+      "name": "Send digest",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Daily FYI digest — Clause 12.5\\n\\nAuto-lane verdicts are compiled into a daily digest to the Returns Desk; **no action required**.\\n\\nIt also carries the Clause 15.2 control: if adjudicators amended more than 10% of system proposals in the rolling window, the digest says so in red and the policy-engine owner owes a divergence review.\\n\\nSet the same `adjudicatorUrl` you used in the main workflow.",
+        "height": 240,
+        "width": 620,
+        "color": 5
+      },
+      "id": "049fcdf8-5c59-4363-9adf-078f09183c6c",
+      "name": "Note 6242b2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -640,
+        20
+      ]
+    }
+  ],
+  "connections": {
+    "Every morning 09:00": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Get decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get decisions": {
+      "main": [
+        [
+          {
+            "node": "Get metrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get metrics": {
+      "main": [
+        [
+          {
+            "node": "Build digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build digest": {
+      "main": [
+        [
+          {
+            "node": "Send digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "rivaya-returns-stage4"
+  },
+  "tags": []
+}
